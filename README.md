@@ -1,9 +1,9 @@
 # Portfolio — Nour el Houda Laajili
 
-Single-file static site. No build step, no dependencies.
+Single-file static site.
 
 ```
-index.html   the whole site (HTML + CSS + a little JS)
+index.html   the whole site (HTML + CSS + JS)
 assets/      Nour_el_houda_LAAJILI_Resume.pdf (EN) and Nour_el_houda_LAAJILI_CV.pdf (FR)
 ```
 
@@ -12,7 +12,7 @@ next to it. Both preferences are remembered per visitor via `localStorage`.
 
 ## Preview locally
 
-Open `index.html` in a browser. That's it.
+Open `index.html` in a browser. 
 
 ## Deploy to GitHub Pages
 
@@ -39,24 +39,6 @@ git commit -m "Update"
 git push
 ```
 
-## Before going live — checklist
-
-- [x] Résumé/CV PDFs are in `assets/` and linked (English button → Resume PDF,
-      French button → CV PDF)
-- [x] GitHub button points at github.com/nourlaajili
-- [ ] Decide whether to keep the phone number in the Contact section — it is
-      public on this page, unlike on a CV you hand out
-- [ ] Add repo links to the two projects once those repos are public
-
-## Custom domain (optional)
-
-Buy a domain, then create a file named `CNAME` in this folder containing just
-the domain (e.g. `nourlaajili.com`), push it, and point these DNS records at
-GitHub:
-
-```
-A     @    185.199.108.153
-A     @    185.199.109.153
 A     @    185.199.110.153
 A     @    185.199.111.153
 CNAME www  <your-username>.github.io
