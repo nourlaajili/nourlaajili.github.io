@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>
+  /* Applied before first paint so a saved theme or language never flashes the wrong one. */
+  (function () {
+    try {
+      var t = localStorage.getItem('theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      var l = localStorage.getItem('lang');
+      if (l === 'en' || l === 'fr') document.documentElement.lang = l;
+    } catch (e) {}
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Nour el Houda Laajili — Data &amp; AI Engineer based in Tunis. Data pipelines, data quality frameworks, and applied ML/LLM work.">
+<title>Nour el Houda Laajili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    color-scheme: dark;
+
+    /* dark (default) — cool slate-teal ink, biased away from the brass accent */
+    --ink:        #0E1519;
+    --surface:    #131C21;
+    --surface-2:  #18232A;
+    --line:       #22333B;
+    --line-soft:  #1B292F;
+
+    --fg:         #E4EBEE;
+    --fg-2:       #96A8B1;
+    --fg-3:       #63767F;
+
+    /* brass — the single accent */
+    --accent:     #E8A33D;
+    --accent-lit: #F2B354;
+    --accent-dim: #9A6C25;
+    /* signal — reserved for validation / pass semantics only */
+    --signal:     #4FB49A;
+    --signal-glow: rgba(79,180,154,.16);
+
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+
+    --rail: 300px;
+  }
+
+  /* light — applies when the OS prefers light and no explicit toggle overrides it */
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      color-scheme: light;
+      --ink:        #F3F6F7;
+      --surface:    #FFFFFF;
+      --surface-2:  #E8EEF0;
+      --line:       #CFDBDE;
+      --line-soft:  #E1E9EB;
+
+      --fg:         #17242B;
+      --fg-2:       #4B6169;
+      --fg-3:       #61757C;
+
+      --accent:     #96600D;
+      --accent-lit: #AD7614;
+      --accent-dim: #C99356;
+      --signal:     #1F8F73;
+      --signal-glow: rgba(31,143,115,.16);
+    }
+  }
+
+  /* explicit toggle choice — wins over both the OS setting and the default */
+  :root[data-theme="light"]{
+    color-scheme: light;
+    --ink:        #F3F6F7;
+    --surface:    #FFFFFF;
+    --surface-2:  #E8EEF0;
+    --line:       #CFDBDE;
+    --line-soft:  #E1E9EB;
+
+    --fg:         #17242B;
+    --fg-2:       #4B6169;
+    --fg-3:       #61757C;
+
+    --accent:     #96600D;
+    --accent-lit: #AD7614;
+    --accent-dim: #C99356;
+    --signal:     #1F8F73;
+    --signal-glow: rgba(31,143,115,.16);
+  }
+
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --ink:        #0E1519;
+    --surface:    #131C21;
+    --surface-2:  #18232A;
+    --line:       #22333B;
+    --line-soft:  #1B292F;
+
+    --fg:         #E4EBEE;
+    --fg-2:       #96A8B1;
+    --fg-3:       #63767F;
+
+    --accent:     #E8A33D;
+    --accent-lit: #F2B354;
+    --accent-dim: #9A6C25;
+    --signal:     #4FB49A;
+    --signal-glow: rgba(79,180,154,.16);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce){
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  }
+
+  body{
+    margin: 0;
+    background: var(--ink);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+
+  :focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* language toggle — everything duplicated inline as sibling spans */
+  .lang-fr{ display: none; }
+  html[lang="fr"] .lang-en{ display: none; }
+  html[lang="fr"] .lang-fr{ display: inline; }
+
+  /* ---------- page controls (fixed, top-right of the page) ---------- */
+
+  .page-controls{
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+    display: flex;
+    gap: 8px;
+  }
+
+  .icon-btn{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--fg-2);
+    cursor: pointer;
+    padding: 0;
+    font-family: var(--mono);
+    font-size: .6875rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    transition: color .18s ease, border-color .18s ease, background-color .18s ease;
+  }
+  .icon-btn:hover{ color: var(--fg); border-color: var(--fg-3); background: var(--surface-2); }
+  .icon-btn svg{ width: 14px; height: 14px; display: block; }
+
+  .lang-toggle{ width: auto; min-width: 28px; padding-inline: 7px; }
+  /* shows the language a click switches TO, not the current one */
+  .lang-target-en{ display: none; }
+  html[lang="fr"] .lang-target-fr{ display: none; }
+  html[lang="fr"] .lang-target-en{ display: inline; }
+
+  .theme-toggle .icon-sun{ display: none; }
+  .theme-toggle .icon-moon{ display: block; }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]) .theme-toggle .icon-sun{ display: block; }
+    :root:not([data-theme="dark"]) .theme-toggle .icon-moon{ display: none; }
+  }
+  :root[data-theme="light"] .theme-toggle .icon-sun{ display: block; }
+  :root[data-theme="light"] .theme-toggle .icon-moon{ display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun{ display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon{ display: block; }
+
+  /* ---------- shell ---------- */
+
+  .shell{
+    max-width: 1140px;
+    margin: 0 auto;
+    padding-inline: 24px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 56px;
+  }
+  @media (min-width: 940px){
+    .shell{
+      /* rail is position:fixed (out of grid flow) above this width, so
+         shell only needs to size main — padding-inline must still match
+         the 40px the .rail left-offset formula below assumes. */
+      padding-inline: 40px;
+    }
+  }
+
+  /* ---------- rail ---------- */
+  /* Fixed, not sticky: sticky still drifts with its container's height
+     once that container's bottom catches up with it near the end of the
+     page. Fixed pins it to the viewport and it never moves. Because fixed
+     takes it out of flow, its left offset is computed to land exactly
+     where the old grid column sat (shell's centering + 40px padding),
+     and main gets a matching margin-left to vacate the space. */
+  .rail{ padding-block: 64px 0; }
+  @media (min-width: 940px){
+    .rail{
+      position: fixed;
+      top: 0;
+      left: max(40px, calc((100vw - 1140px) / 2 + 40px));
+      width: var(--rail);
+      padding-block: 72px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+  }
+
+  .status{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin: 0 0 18px;
+  }
+  .status .dot{
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--signal);
+    box-shadow: 0 0 0 3px var(--signal-glow);
+  }
+
+  .name{
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: clamp(1.75rem, 5.2vw, 2.125rem);
+    line-height: 1.12;
+    letter-spacing: -.035em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .role{
+    font-family: var(--mono);
+    font-size: .8125rem;
+    letter-spacing: .04em;
+    color: var(--accent);
+    margin: 0 0 20px;
+  }
+  .pitch{
+    font-size: .9375rem;
+    color: var(--fg-2);
+    margin: 0;
+    max-width: 34ch;
+  }
+
+  .nav{ display: none; }
+  @media (min-width: 940px){
+    .nav{
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-left: 1px solid var(--line-soft);
+    }
+    .nav a{
+      font-family: var(--mono);
+      font-size: .75rem;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      text-decoration: none;
+      padding: 6px 0 6px 16px;
+      margin-left: -1px;
+      border-left: 1px solid transparent;
+      transition: color .18s ease, border-color .18s ease;
+    }
+    .nav a:hover{ color: var(--fg-2); }
+    .nav a.is-current{ color: var(--fg); border-left-color: var(--accent); }
+  }
+
+  .contact-links{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .btn{
+    font-family: var(--mono);
+    font-size: .75rem;
+    letter-spacing: .05em;
+    text-decoration: none;
+    color: var(--fg-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 7px 12px;
+    background: transparent;
+    transition: color .18s ease, border-color .18s ease, background-color .18s ease;
+  }
+  .btn:hover{ color: var(--fg); border-color: var(--fg-3); background: var(--surface); }
+  .btn--primary{ color: var(--ink); background: var(--accent); border-color: var(--accent); font-weight: 600; }
+  .btn--primary:hover{ color: var(--ink); background: var(--accent-lit); border-color: var(--accent-lit); }
+
+  /* ---------- main ---------- */
+
+  main{ padding-block: 0 96px; }
+  @media (min-width: 940px){
+    main{
+      padding-block: 72px 120px;
+      margin-left: calc(var(--rail) + 72px);
+    }
+  }
+
+  section{ scroll-margin-top: 88px; }
+  section + section{ margin-top: 72px; }
+
+  .eyebrow{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: .6875rem;
+    font-weight: 400;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin: 0 0 28px;
+  }
+  .eyebrow::after{
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line-soft);
+  }
+
+  h2{ font: inherit; margin: 0; }
+  h3{
+    font-family: var(--sans);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    margin: 0;
+  }
+  p{ margin: 0; }
+  ul{ margin: 0; padding: 0; list-style: none; }
+
+  /* ---------- focus ---------- */
+
+  .focus{
+    display: grid;
+    gap: 28px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px){ .focus{ grid-template-columns: repeat(3, 1fr); gap: 28px; } }
+
+  .focus-item{ display: flex; flex-direction: column; gap: 10px; }
+  .focus-item h3{ font-size: .9375rem; }
+  .focus-item p{ font-size: .875rem; color: var(--fg-2); }
+  .focus-item .tools{
+    font-family: var(--mono);
+    font-size: .75rem;
+    color: var(--fg-3);
+    line-height: 1.7;
+    margin-top: 2px;
+  }
+
+  /* ---------- timeline ---------- */
+
+  .timeline{ display: flex; flex-direction: column; gap: 44px; }
+
+  .role-head{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 16px;
+  }
+  .role-org{
+    font-family: var(--mono);
+    font-size: .8125rem;
+    color: var(--fg-2);
+    margin-top: 4px;
+    flex-basis: 100%;
+  }
+  .role-when{
+    font-family: var(--mono);
+    font-size: .75rem;
+    letter-spacing: .06em;
+    color: var(--fg-3);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .bullets{ display: flex; flex-direction: column; gap: 10px; max-width: 70ch; }
+  .bullets li{
+    position: relative;
+    padding-left: 20px;
+    font-size: .9375rem;
+    color: var(--fg-2);
+  }
+  .bullets li::before{
+    content: "";
+    position: absolute;
+    left: 2px; top: .72em;
+    width: 7px; height: 1px;
+    background: var(--accent-dim);
+  }
+  .bullets strong{ color: var(--fg); font-weight: 500; }
+
+  /* ---------- pipeline ---------- */
+
+  .pipeline{
+    margin-top: 22px;
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    background: var(--surface);
+    padding: 18px;
+  }
+  .pipeline-label{
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin-bottom: 14px;
+  }
+  .orchestration{
+    position: relative;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    padding: 20px 14px 14px;
+  }
+  .orchestration-label{
+    position: absolute;
+    top: -9px;
+    left: 12px;
+    background: var(--surface);
+    padding: 0 8px;
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .04em;
+    color: var(--fg-3);
+  }
+  .orchestration-label strong{ color: var(--accent); font-weight: 600; }
+  .stages{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .stage{
+    flex: 1 1 130px;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--surface-2);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stage .step{
+    font-family: var(--mono);
+    font-size: .8125rem;
+    font-weight: 500;
+    color: var(--fg);
+  }
+  .stage .impl{
+    font-family: var(--mono);
+    font-size: .6875rem;
+    color: var(--fg-3);
+    overflow-wrap: anywhere;
+  }
+  .arrow{
+    align-self: center;
+    font-family: var(--mono);
+    color: var(--accent-dim);
+    font-size: .875rem;
+    flex: 0 0 auto;
+  }
+  @media (max-width: 719px){ .arrow{ display: none; } }
+
+  .dimensions{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .dimensions .dim-label{
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    flex-basis: 100%;
+  }
+  .dimensions .dim{
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: .75rem;
+    color: var(--fg-2);
+  }
+  .dimensions .dim::before{
+    content: "";
+    width: 5px; height: 5px;
+    border-radius: 1px;
+    background: var(--signal);
+  }
+
+  /* ---------- projects ---------- */
+
+  .projects{ display: flex; flex-direction: column; gap: 32px; }
+  .project{
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--surface);
+  }
+  .project-head{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 20px;
+  }
+  .project p{ font-size: .9375rem; color: var(--fg-2); max-width: 68ch; }
+
+  .stack{ display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip{
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .03em;
+    color: var(--fg-3);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 3px 8px;
+  }
+
+  /* ---------- skills ---------- */
+
+  .skills{ display: flex; flex-direction: column; gap: 22px; }
+  .skill-row{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .skill-row:last-child{ border-bottom: 0; padding-bottom: 0; }
+  @media (min-width: 640px){
+    .skill-row{ grid-template-columns: 190px minmax(0, 1fr); gap: 24px; align-items: start; }
+  }
+  .skill-row h3{
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    padding-top: 4px;
+  }
+
+  /* ---------- credentials ---------- */
+
+  .creds{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  @media (min-width: 700px){ .creds{ grid-template-columns: 1.15fr 1fr; gap: 48px; } }
+
+  .cred-group h3{
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin-bottom: 14px;
+  }
+  .cert-list{ display: flex; flex-direction: column; }
+  .cert-list li{
+    font-size: .875rem;
+    color: var(--fg-2);
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line-soft);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .cert-list li:last-child{ border-bottom: 0; }
+  .cert-list .issuer{
+    font-family: var(--mono);
+    font-size: .6875rem;
+    color: var(--fg-3);
+    white-space: nowrap;
+    padding-top: 3px;
+  }
+
+  .edu{ display: flex; flex-direction: column; gap: 22px; }
+  .edu-item .degree{ font-size: .9375rem; color: var(--fg); font-weight: 500; }
+  .edu-item .school{ font-size: .875rem; color: var(--fg-2); margin-top: 2px; }
+  .edu-item .meta{
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .06em;
+    color: var(--fg-3);
+    margin-top: 5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .honors{ color: var(--signal); }
+
+  /* ---------- contact ---------- */
+
+  .contact-card{
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .contact-card p{ max-width: 58ch; color: var(--fg-2); font-size: .9375rem; }
+  .contact-grid{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  @media (min-width: 560px){ .contact-grid{ grid-template-columns: repeat(2, 1fr); gap: 16px 32px; } }
+  .contact-grid a, .contact-grid .row{
+    font-family: var(--mono);
+    font-size: .8125rem;
+    color: var(--fg-2);
+    text-decoration: none;
+    display: flex;
+    gap: 10px;
+    overflow-wrap: anywhere;
+  }
+  .contact-grid a:hover{ color: var(--accent); }
+  .contact-grid .k{ color: var(--fg-3); flex: 0 0 66px; }
+
+  footer{
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line-soft);
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .06em;
+    color: var(--fg-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body id="top">
+
+<div class="page-controls">
+  <button type="button" class="icon-btn lang-toggle" id="lang-toggle">
+    <span class="lang-target-fr">FR</span>
+    <span class="lang-target-en">EN</span>
+  </button>
+  <button type="button" class="icon-btn theme-toggle" id="theme-toggle">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"></circle>
+      <line x1="12" y1="2" x2="12" y2="4"></line>
+      <line x1="12" y1="20" x2="12" y2="22"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="2" y1="12" x2="4" y2="12"></line>
+      <line x1="20" y1="12" x2="22" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  </button>
+</div>
+
+<div class="shell">
+
+  <aside class="rail">
+    <div>
+      <p class="status"><span class="dot"></span><span class="lang-en">Open to opportunities</span><span class="lang-fr">Ouverte aux opportunités</span></p>
+      <h1 class="name">Nour el Houda<br>Laajili</h1>
+      <p class="role">Data &amp; AI Engineer</p>
+      <p class="pitch">
+        <span class="lang-en">Graduate Computer Engineer with a strong orientation toward Data &amp; AI &mdash; building reliable, data-driven systems and applying AI to practical data challenges.</span>
+        <span class="lang-fr">Ingénieure diplômée en informatique, avec une forte orientation vers la Data &amp; l'IA &mdash; conception de systèmes fiables fondés sur les données et application de l'IA à des problématiques concrètes.</span>
+      </p>
+    </div>
+
+    <nav class="nav" aria-label="Sections">
+      <a href="#focus">Focus</a>
+      <a href="#experience"><span class="lang-en">Experience</span><span class="lang-fr">Expérience</span></a>
+      <a href="#projects"><span class="lang-en">Projects</span><span class="lang-fr">Projets</span></a>
+      <a href="#skills"><span class="lang-en">Skills</span><span class="lang-fr">Compétences</span></a>
+      <a href="#credentials"><span class="lang-en">Credentials</span><span class="lang-fr">Diplômes</span></a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <div class="contact-links">
+      <a class="btn btn--primary lang-en" href="assets/Nour_el_houda_LAAJILI_Resume.pdf">Resume</a>
+      <a class="btn btn--primary lang-fr" href="assets/Nour_el_houda_LAAJILI_CV.pdf">CV</a>
+      <a class="btn" href="https://www.linkedin.com/in/nour-el-houda-laajili/" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="btn" href="https://github.com/nourlaajili" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="mailto:nour-el-houda.laajili@enis.tn">Email</a>
+    </div>
+  </aside>
+
+  <main>
+
+  <section id="focus">
+    <h2 class="eyebrow"><span class="lang-en">What I work on</span><span class="lang-fr">Domaines d'expertise</span></h2>
+    <ul class="focus">
+      <li class="focus-item">
+        <h3><span class="lang-en">Pipelines &amp; modeling</span><span class="lang-fr">Pipelines &amp; modélisation</span></h3>
+        <p>
+          <span class="lang-en">Designing warehouse schemas and orchestrating ingestion and transformation so a run is one command, not eight manual stages.</span>
+          <span class="lang-fr">Je conçois des schémas d'entrepôt de données et j'orchestre l'ingestion et la transformation pour qu'une exécution tienne en une seule commande, plutôt qu'en huit étapes manuelles.</span>
+        </p>
+        <p class="tools">PostgreSQL · dbt · Airflow · SQL Server · Talend</p>
+      </li>
+      <li class="focus-item">
+        <h3><span class="lang-en">Data quality</span><span class="lang-fr">Qualité des données</span></h3>
+        <p>
+          <span class="lang-en">Turning business rules into expectation suites that run inside the pipeline, so bad data is caught at the stage that produced it.</span>
+          <span class="lang-fr">Je traduis les règles métier en suites de tests qui s'exécutent au sein du pipeline, pour détecter les données erronées dès l'étape qui les a produites.</span>
+        </p>
+        <p class="tools">Great Expectations · CI/CD · Docker</p>
+      </li>
+      <li class="focus-item">
+        <h3><span class="lang-en">Applied AI</span><span class="lang-fr">IA appliquée</span></h3>
+        <p>
+          <span class="lang-en">Rule-based checks, ML anomaly detection and LLM review layered onto the pipeline to do the first pass on a failure.</span>
+          <span class="lang-fr">Des règles métier, de la détection d'anomalies par ML et une revue par LLM viennent s'ajouter au pipeline pour effectuer une première analyse en cas d'échec.</span>
+        </p>
+        <p class="tools">Python · scikit-learn · LLMs · RAG · n8n</p>
+      </li>
+    </ul>
+  </section>
+
+  <section id="experience">
+    <h2 class="eyebrow"><span class="lang-en">Experience</span><span class="lang-fr">Expérience professionnelle</span></h2>
+    <div class="timeline">
+
+      <article>
+        <header class="role-head">
+          <h3><span class="lang-en">Data &amp; AI Engineering Internship</span><span class="lang-fr">Stage d'ingénierie Data &amp; IA</span></h3>
+          <span class="role-when"><span class="lang-en">Feb &mdash; Jul 2026 · Tunis</span><span class="lang-fr">Févr. &mdash; Juil. 2026 · Tunis</span></span>
+          <span class="role-org">Moonside Consulting &amp; Services — <span class="lang-en">client: MorgenFund</span><span class="lang-fr">client : MorgenFund</span></span>
+        </header>
+        <ul class="bullets">
+          <li>
+            <span class="lang-en">Engineered an <strong>end-to-end data pipeline for the data warehouse</strong> using PostgreSQL, dbt and Airflow, automating ingestion, transformation, validation and monitoring workflows and eliminating manual stage-by-stage execution.</span>
+            <span class="lang-fr">Conception d'un <strong>pipeline de données de bout en bout pour l'entrepôt de données</strong> avec PostgreSQL, dbt et Airflow, automatisant l'ingestion, la transformation, la validation et le monitoring, éliminant l'exécution manuelle étape par étape.</span>
+          </li>
+          <li>
+            <span class="lang-en">Implemented a <strong>data quality layer with Great Expectations</strong>, validating completeness, validity, consistency and uniqueness against business-defined expectations — replacing fragmented checks with systematic validation.</span>
+            <span class="lang-fr">Mise en place de <strong>contrôles automatisés de qualité des données avec Great Expectations</strong>, validant la complétude, la validité, la cohérence et l'unicité selon des règles métier — remplaçant des contrôles fragmentés par une validation systématique.</span>
+          </li>
+          <li>
+            <span class="lang-en">Integrated <strong>intelligent analysis modules</strong> combining rule-based checks, ML algorithms and LLMs to detect anomalies, generate correction recommendations and review transformation code — automating first-level analysis and supporting data-engineer investigation.</span>
+            <span class="lang-fr">Intégration de <strong>modules d'analyse intelligente</strong> combinant règles métier, algorithmes de Machine Learning et LLMs, permettant la détection d'anomalies, la génération de recommandations de correction et la revue du code de transformation — automatisant une première analyse et facilitant l'investigation des ingénieurs data.</span>
+          </li>
+          <li>
+            <span class="lang-en">Developed <strong>Power BI dashboards and a Flask-based portal</strong> to centralize business and pipeline monitoring, giving visibility into data quality, anomalies and operational performance through one interface.</span>
+            <span class="lang-fr">Développement de <strong>tableaux de bord Power BI et d'un portail Flask</strong> centralisant le monitoring métier et technique du pipeline, offrant une visibilité unifiée sur la qualité des données, les anomalies et la performance opérationnelle.</span>
+          </li>
+        </ul>
+
+        <div class="pipeline">
+          <p class="pipeline-label"><span class="lang-en">Pipeline architecture</span><span class="lang-fr">Architecture du pipeline</span></p>
+          <div class="orchestration">
+            <span class="orchestration-label"><strong>Apache Airflow</strong> — <span class="lang-en">orchestrates every stage</span><span class="lang-fr">orchestre chaque étape</span></span>
+            <div class="stages">
+              <div class="stage"><span class="step"><span class="lang-en">Ingest</span><span class="lang-fr">Ingestion</span></span><span class="impl">PostgreSQL</span></div>
+              <span class="arrow" aria-hidden="true">&rarr;</span>
+              <div class="stage"><span class="step"><span class="lang-en">Transform</span><span class="lang-fr">Transformation</span></span><span class="impl">dbt</span></div>
+              <span class="arrow" aria-hidden="true">&rarr;</span>
+              <div class="stage"><span class="step"><span class="lang-en">Validate</span><span class="lang-fr">Validation</span></span><span class="impl">Great Expectations</span></div>
+              <span class="arrow" aria-hidden="true">&rarr;</span>
+              <div class="stage"><span class="step"><span class="lang-en">Analyze</span><span class="lang-fr">Analyse</span></span><span class="impl"><span class="lang-en">rules · ML · LLM</span><span class="lang-fr">règles · ML · LLM</span></span></div>
+              <span class="arrow" aria-hidden="true">&rarr;</span>
+              <div class="stage"><span class="step"><span class="lang-en">Monitor</span><span class="lang-fr">Supervision</span></span><span class="impl">Power BI · Flask</span></div>
+            </div>
+          </div>
+          <div class="dimensions">
+            <span class="dim-label"><span class="lang-en">Quality dimensions covered</span><span class="lang-fr">Dimensions de qualité couvertes</span></span>
+            <span class="dim"><span class="lang-en">Completeness</span><span class="lang-fr">Complétude</span></span>
+            <span class="dim"><span class="lang-en">Validity</span><span class="lang-fr">Validité</span></span>
+            <span class="dim"><span class="lang-en">Consistency</span><span class="lang-fr">Cohérence</span></span>
+            <span class="dim"><span class="lang-en">Uniqueness</span><span class="lang-fr">Unicité</span></span>
+          </div>
+        </div>
+      </article>
+
+      <article>
+        <header class="role-head">
+          <h3><span class="lang-en">Data Engineering Internship</span><span class="lang-fr">Stage d'ingénierie des données</span></h3>
+          <span class="role-when"><span class="lang-en">Jun &mdash; Aug 2025 · Sfax</span><span class="lang-fr">Juin &mdash; Août 2025 · Sfax</span></span>
+          <span class="role-org">LAGID Olive Soft Tunisia</span>
+        </header>
+        <ul class="bullets">
+          <li>
+            <span class="lang-en">Automated QA reporting using <strong>Talend ETL pipelines</strong> and Allure JSON data, reducing manual analysis time by 80%.</span>
+            <span class="lang-fr">Automatisation du reporting QA à partir de <strong>pipelines ETL Talend</strong> et de données Allure JSON, réduisant le temps d'analyse manuelle de 80 %.</span>
+          </li>
+          <li>
+            <span class="lang-en">Modeled a <strong>SQL Server data warehouse</strong> using a constellation schema, centralizing over 15,000 test executions for reliable quality-trend analysis.</span>
+            <span class="lang-fr">Modélisation d'un <strong>entrepôt de données SQL Server</strong> selon un schéma en constellation, centralisant plus de 15 000 exécutions de tests pour une analyse fiable des tendances qualité.</span>
+          </li>
+          <li>
+            <span class="lang-en">Deployed <strong>multi-profile Power BI dashboards</strong>, improving cross-team visibility and data-driven decision-making.</span>
+            <span class="lang-fr">Déploiement de <strong>tableaux de bord Power BI multi-profils</strong>, améliorant la visibilité inter-équipes et la prise de décision basée sur les données.</span>
+          </li>
+        </ul>
+      </article>
+
+      <article>
+        <header class="role-head">
+          <h3><span class="lang-en">Full-Stack Development Internship</span><span class="lang-fr">Stage de développement Full-Stack</span></h3>
+          <span class="role-when"><span class="lang-en">Jun &mdash; Aug 2024 · Nabeul</span><span class="lang-fr">Juin &mdash; Août 2024 · Nabeul</span></span>
+          <span class="role-org">Viore Digital</span>
+        </header>
+        <ul class="bullets">
+          <li>
+            <span class="lang-en">Developed a <strong>Laravel/MySQL web platform</strong> centralizing creator profiles and connecting them with 200+ potential clients.</span>
+            <span class="lang-fr">Développement d'une <strong>plateforme web Laravel/MySQL</strong> centralisant les profils de créateurs et les connectant à plus de 200 clients potentiels.</span>
+          </li>
+          <li>
+            <span class="lang-en">Designed a responsive interface and optimized database management for over 5,000 user and content records.</span>
+            <span class="lang-fr">Conception d'une interface responsive et optimisation de la gestion de base de données pour plus de 5 000 utilisateurs et contenus.</span>
+          </li>
+        </ul>
+      </article>
+
+    </div>
+  </section>
+
+  <section id="projects">
+    <h2 class="eyebrow"><span class="lang-en">Projects</span><span class="lang-fr">Projets</span></h2>
+    <div class="projects">
+
+      <article class="project">
+        <header class="project-head">
+          <h3><span class="lang-en">AI-Powered Secure Authentication System for Immersive Medical Application</span><span class="lang-fr">Système d'authentification sécurisée pour application médicale immersive</span></h3>
+          <span class="role-when">Nov 2025</span>
+        </header>
+        <p>
+          <span class="lang-en">Designed an AI-driven authentication workflow using LLMs and RAG to classify simulated attack patterns, with detection and alerting automated through n8n and API integrations.</span>
+          <span class="lang-fr">Conception d'un workflow d'authentification piloté par IA utilisant LLMs et RAG pour classifier des schémas d'attaque simulés, avec détection et alertes automatisées via n8n et des intégrations API.</span>
+        </p>
+        <div class="stack">
+          <span class="chip">LLM</span><span class="chip">RAG</span><span class="chip">Python</span><span class="chip">n8n</span><span class="chip">REST APIs</span>
+        </div>
+      </article>
+
+      <article class="project">
+        <header class="project-head">
+          <h3><span class="lang-en">Pharmaceutical Supply Chain Management System</span><span class="lang-fr">Système de gestion de chaîne d'approvisionnement pharmaceutique</span></h3>
+          <span class="role-when"><span class="lang-en">Nov 2024 &mdash; Apr 2025</span><span class="lang-fr">Nov. 2024 &mdash; Avr. 2025</span></span>
+        </header>
+        <p>
+          <span class="lang-en">Built a full-stack pharmaceutical traceability platform on the MERN stack (React.js, Node.js, Express.js, MongoDB), with Solidity smart contracts on Hedera Hashgraph and IPFS-based regulatory document storage that cut verification time by 40%.</span>
+          <span class="lang-fr">Développement d'une plateforme complète de traçabilité pharmaceutique (stack MERN : React.js, Node.js, Express.js, MongoDB) intégrant des smart contracts Solidity sur Hedera Hashgraph et un stockage sécurisé des documents réglementaires via IPFS, réduisant de 40 % le temps de vérification.</span>
+        </p>
+        <div class="stack">
+          <span class="chip">React</span><span class="chip">Node.js</span><span class="chip">Express</span><span class="chip">MongoDB</span><span class="chip">Solidity</span><span class="chip">Hedera</span><span class="chip">IPFS</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section id="skills">
+    <h2 class="eyebrow"><span class="lang-en">Skills</span><span class="lang-fr">Compétences</span></h2>
+    <div class="skills">
+
+      <div class="skill-row">
+        <h3>Data Engineering</h3>
+        <div class="stack">
+          <span class="chip">Python</span><span class="chip">SQL</span><span class="chip">ETL / ELT</span><span class="chip"><span class="lang-en">Data Modeling</span><span class="lang-fr">Modélisation des données</span></span><span class="chip">dbt</span><span class="chip">Apache Airflow</span><span class="chip">Talend</span>
+        </div>
+      </div>
+
+      <div class="skill-row">
+        <h3><span class="lang-en">Databases &amp; BI</span><span class="lang-fr">Bases de données &amp; BI</span></h3>
+        <div class="stack">
+          <span class="chip">PostgreSQL</span><span class="chip">SQL Server</span><span class="chip">MongoDB</span><span class="chip">Power BI</span>
+        </div>
+      </div>
+
+      <div class="skill-row">
+        <h3><span class="lang-en">Data &amp; AI</span><span class="lang-fr">Data &amp; IA</span></h3>
+        <div class="stack">
+          <span class="chip">Machine Learning</span><span class="chip">LLMs</span><span class="chip">RAG</span><span class="chip">Pandas</span><span class="chip">NumPy</span><span class="chip">Scikit-learn</span>
+        </div>
+      </div>
+
+      <div class="skill-row">
+        <h3><span class="lang-en">Data quality &amp; Automation</span><span class="lang-fr">Qualité des données &amp; Automatisation</span></h3>
+        <div class="stack">
+          <span class="chip">Great Expectations</span><span class="chip">Git</span><span class="chip">Docker</span><span class="chip">CI/CD</span><span class="chip">n8n</span>
+        </div>
+      </div>
+
+      <div class="skill-row">
+        <h3><span class="lang-en">Development</span><span class="lang-fr">Développement</span></h3>
+        <div class="stack">
+          <span class="chip">Java</span><span class="chip">Flask</span><span class="chip">React</span><span class="chip">Node.js</span><span class="chip">Laravel</span>
+        </div>
+      </div>
+
+      <div class="skill-row">
+        <h3><span class="lang-en">Languages</span><span class="lang-fr">Langues</span></h3>
+        <div class="stack">
+          <span class="chip"><span class="lang-en">Arabic — native</span><span class="lang-fr">Arabe — natif</span></span><span class="chip"><span class="lang-en">French — bilingual</span><span class="lang-fr">Français — bilingue</span></span><span class="chip"><span class="lang-en">English — fluent</span><span class="lang-fr">Anglais — courant</span></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="credentials">
+    <h2 class="eyebrow"><span class="lang-en">Credentials</span><span class="lang-fr">Diplômes &amp; certifications</span></h2>
+    <div class="creds">
+
+      <div class="cred-group">
+        <h3>Certifications</h3>
+        <ul class="cert-list">
+          <li><span>Apache Airflow 3 Fundamentals</span><span class="issuer">Astronomer</span></li>
+          <li><span>Data Analytics Essentials</span><span class="issuer">Cisco Networking Academy</span></li>
+          <li><span>Microsoft Azure Fundamentals (AZ-900)</span><span class="issuer">Microsoft</span></li>
+          <li><span>Hashgraph Developer Course</span><span class="issuer">Hedera</span></li>
+          <li><span>Oracle Cloud Infrastructure Certified AI Foundations Associate</span><span class="issuer">Oracle</span></li>
+          <li><span>Data Science Essentials With Python</span><span class="issuer">Cisco Networking Academy</span></li>
+          <li><span>DevNet Associate</span><span class="issuer">Cisco Networking Academy</span></li>
+        </ul>
+      </div>
+
+      <div class="cred-group">
+        <h3><span class="lang-en">Education &amp; leadership</span><span class="lang-fr">Formation &amp; engagement</span></h3>
+        <div class="edu">
+          <div class="edu-item">
+            <div class="degree"><span class="lang-en">Engineering Degree — Computer Science &amp; Applied Mathematics</span><span class="lang-fr">Diplôme d'Ingénieur — Informatique et Mathématiques Appliquées</span></div>
+            <div class="school"><span class="lang-en">National School of Engineers of Sfax (ENIS)</span><span class="lang-fr">École Nationale d'Ingénieurs de Sfax (ENIS)</span></div>
+            <div class="meta">2023 – 2026 · <span class="honors"><span class="lang-en">Highest honors, jury commendation</span><span class="lang-fr">Mention Très Bien avec Félicitations du Jury</span></span></div>
+          </div>
+          <div class="edu-item">
+            <div class="degree"><span class="lang-en">Preparatory Cycle — Mathematics &amp; Physics (MP)</span><span class="lang-fr">Cycle préparatoire — Mathématiques et Physique (MP)</span></div>
+            <div class="school"><span class="lang-en">Preparatory Institute for Engineering Studies of Nabeul (IPEIN)</span><span class="lang-fr">Institut Préparatoire aux Études d'Ingénieurs de Nabeul (IPEIN)</span></div>
+            <div class="meta">2021 – 2023</div>
+          </div>
+          <div class="edu-item">
+            <div class="degree"><span class="lang-en">Chair, IEEE ENIS Computer Society Student Chapter</span><span class="lang-fr">Présidente, chapitre IEEE ENIS Computer Society</span></div>
+            <div class="school"><span class="lang-en">Also planning head for the <em>Pitch Yourself For A Career</em> forum</span><span class="lang-fr">Également cheffe de l'équipe planning du forum <em>Pitch Yourself For A Career</em></span></div>
+            <div class="meta">2024 – 2025</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2 class="eyebrow">Contact</h2>
+    <div class="contact-card">
+      <p>
+        <span class="lang-en">I am looking for a first full-time role in data engineering or applied AI — in Tunis, or remote. Happy to walk through any of the work above.</span>
+        <span class="lang-fr">Je recherche mon premier poste à temps plein en ingénierie des données ou en IA appliquée — à Tunis, ou à distance. Je serais ravie de présenter en détail l'un des projets ci-dessus.</span>
+      </p>
+      <div class="contact-grid">
+        <a href="mailto:nour-el-houda.laajili@enis.tn"><span class="k">Email</span>nour-el-houda.laajili@enis.tn</a>
+        <a href="tel:+21626166408"><span class="k"><span class="lang-en">Phone</span><span class="lang-fr">Téléphone</span></span>+216 26 166 408</a>
+        <a href="https://www.linkedin.com/in/nour-el-houda-laajili/" target="_blank" rel="noopener"><span class="k">LinkedIn</span>/in/nour-el-houda-laajili</a>
+        <span class="row"><span class="k"><span class="lang-en">Based in</span><span class="lang-fr">Basée à</span></span><span class="lang-en">Tunis, Tunisia</span><span class="lang-fr">Tunis, Tunisie</span></span>
+      </div>
+    </div>
+
+    <footer>
+      <span>Nour el Houda Laajili — Data &amp; AI Engineer</span>
+      <span><span class="lang-en">Tunis, Tunisia</span><span class="lang-fr">Tunis, Tunisie</span></span>
+    </footer>
+  </section>
+
+  </main>
+
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var themeBtn = document.getElementById('theme-toggle');
+    var langBtn = document.getElementById('lang-toggle');
+
+    function effectiveTheme() {
+      var attr = root.getAttribute('data-theme');
+      if (attr === 'light' || attr === 'dark') return attr;
+      var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      return prefersLight ? 'light' : 'dark';
+    }
+
+    function currentLang() {
+      return root.lang === 'fr' ? 'fr' : 'en';
+    }
+
+    function refreshLabels() {
+      var lang = currentLang();
+      if (themeBtn) {
+        var theme = effectiveTheme();
+        var nextTheme = theme === 'dark' ? 'light' : 'dark';
+        var label = lang === 'fr'
+          ? (nextTheme === 'dark' ? 'Passer au thème sombre' : 'Passer au thème clair')
+          : 'Switch to ' + nextTheme + ' theme';
+        themeBtn.setAttribute('aria-label', label);
+        themeBtn.setAttribute('aria-pressed', String(theme === 'light'));
+      }
+      if (langBtn) {
+        langBtn.setAttribute('aria-label', lang === 'fr' ? 'Switch to English' : 'Passer en français');
+      }
+    }
+
+    refreshLabels();
+
+    if (themeBtn) {
+      themeBtn.addEventListener('click', function () {
+        var next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        try { localStorage.setItem('theme', next); } catch (e) {}
+        refreshLabels();
+      });
+    }
+
+    if (langBtn) {
+      langBtn.addEventListener('click', function () {
+        var next = currentLang() === 'en' ? 'fr' : 'en';
+        root.lang = next;
+        try { localStorage.setItem('lang', next); } catch (e) {}
+        refreshLabels();
+      });
+    }
+  })();
+
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.nav a'));
+    if (!links.length || !('IntersectionObserver' in window)) return;
+
+    var byId = {};
+    var sections = links.map(function (link) {
+      var el = document.querySelector(link.getAttribute('href'));
+      if (el) byId[el.id] = link;
+      return el;
+    }).filter(Boolean);
+
+    if (!sections.length) return;
+
+    function setCurrent(id) {
+      links.forEach(function (l) { l.classList.remove('is-current'); });
+      if (byId[id]) byId[id].classList.add('is-current');
+    }
+
+    setCurrent(sections[0].id);
+
+    var observer = new IntersectionObserver(function (entries) {
+      var visible = entries.filter(function (e) { return e.isIntersecting; });
+      if (!visible.length) return;
+      visible.sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+      setCurrent(visible[0].target.id);
+    }, { rootMargin: '-10% 0px -70% 0px', threshold: 0 });
+
+    sections.forEach(function (s) { observer.observe(s); });
+  })();
+</script>
+
+</body>
+</html>
